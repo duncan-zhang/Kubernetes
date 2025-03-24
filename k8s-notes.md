@@ -1,23 +1,19 @@
 # Pod
 
-## How to create a pod?
-
-### Imperative
+## Imperative
 ```sh
 kubectl run web --image=nginx
 ```
 ```sh
 kubectl run client --image=busybox --command -- bin/sh -c "sleep 100000"
 ```
-僅能建立單一<span style="color: red;">containerd</span>
+僅能建立單一<containerd>
 
-### Declarative
+## Declarative
 ```sh
 kubectl apply -f nginx.yml
 ```
-建立multi<span style="color: red;">containerd</span>
-
-------
+建立multi<containerd>
 
 ## kubectl dry-run
 
@@ -84,9 +80,7 @@ kubectl get pods <pod-name> --watch -v 6
 kubectl get events -w &
 ```
 
-------
-
-# kubectl proxy
+## kubectl proxy
 透過proxy才能直接訪問k8s api
 後臺執行
 ```sh
@@ -96,6 +90,8 @@ kubectl proxy &
 ```sh
 curl http://127.0.0.1:8001/api/v1/namespaces?limit=500
 ```
+## Static Pod
+
 
 # Namespace
 ```sh
