@@ -1,5 +1,3 @@
-# K8S Notes
-
 # Pod
 
 ## How to create a pod?
@@ -7,98 +5,156 @@
 ### Imperative
 ```sh
 kubectl run web --image=nginx
+```
+```sh
 kubectl run client --image=busybox --command -- bin/sh -c "sleep 100000"
 ```
-僅能建立單一containerd
+僅能建立單一<span style="color: red;">containerd</span>
 
 ### Declarative
+```sh
 kubectl apply -f nginx.yml
-
-建立多個containerd
+```
+建立multi<span style="color: red;">containerd</span>
 
 ------
 
 ## kubectl dry-run
 
 ### Server-side
+```sh
 kubectl apply -f nginx.yml --dry-run=server
-
+```
 ### Client-side
+```sh
 kubectl apply -f nginx.yml --dry-run=client
+```
+```sh
 kubectl run web --image=nginx --dry-run=client -o yaml
+```
+```sh
 kubectl run web --image=nginx --dry-run=client -o yaml > nginx.yml
+```
 
 ## kubectl diff
 比較目前運行與新yaml有什麼差異
+```sh
 kubectl diff -f new-nginx.yml
+```
 
 ## Pod的基本操作
+```sh
 kubectl get pods
+```
+```sh
 kubectl get pods client
+```
+```sh
 kubectl delete pod web
+```
 詳述pod內容
+```sh
 kubectl describe pod my-pod
- 
+``` 
 ## 登入Container中
-kubectl exec client -- date
 登入容器中
-kubectl exec client -it -- sh
+```sh
+kubectl exec client -- date
+```
 查詢
-kubectl exec my-pod -c
+```sh
+kubectl exec client -it -- sh
+```
 指定登入(多容器中)
+```sh
+kubectl exec my-pod -c
+```
+```sh
 kubectl exec my-pod -c nginx -- date
+```
 
 ## API level log
-kubectl get pod <pod-name> -v 6
 --watch 持續監聽kubectl
+```sh
+kubectl get pod <pod-name> -v 6
 kubectl get pods <pod-name> --watch -v 6
+```
 後臺執行事件日誌
+```sh
 kubectl get events -w &
+```
 
 ------
 
-#kubectl proxy
+# kubectl proxy
 透過proxy才能直接訪問k8s api
 後臺執行
+```sh
 kubectl proxy &
+```
 通过proxy来访问API了，例如
+```sh
 curl http://127.0.0.1:8001/api/v1/namespaces?limit=500
+```
 
 # Namespace
+```sh
 kubectl get ns
 kubectl describe ns
 kubectl get ns -A
 kubectl create namespace demo
 kubectl delete namespaces demo
-##Change default namespace
+```
+## Change default namespace
 查看
+```sh
 kubectl config get-contexts
+```
 切換default到ns demo
+```sh
 kubectl config set-context --current --namespace demo
-
+```
 ------
+
 # Deployment
 
 ### 控制關係
 Deployment -> ReplicaSets -> pods
 
 ### replicas
+```sh
 kubectl scale deployment web --replicas 5
+```
+```sh
 kubectl edit deployments.apps web
+```
 ### rollout
+```sh
 kubectl edit deployments.apps web
+```
+```sh
 kubectl rollout history deployment web
+```
+```sh
 kubectl rollout undo deployment web --to-revision=1
+```
 
 ## Labels
 show
+```sh
 kubectl get nodes --show-labels
+```
 add
+```sh
 kubectl label nodes k8s-worker hardware=local_gpu
+```
 delete
+```sh
 kubectl label nodes k8s-worker1 hardware-
+```
+------
 
-#Scheduling
+# Scheduling
 
 ## Node Selector
 
@@ -109,6 +165,7 @@ kubectl label nodes k8s-worker1 hardware-
 kubectl taint nodes k8s-worker1 key1=value1:NoSchedule
 kubectl taint nodes k8s-worker1 key1=value1:NoSchedule-
 ```
+------
 
 # Storage
 
