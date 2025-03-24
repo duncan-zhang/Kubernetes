@@ -129,7 +129,6 @@ delete
 ```sh
 kubectl label nodes k8s-worker1 hardware-
 ```
-------
 
 ## 控制關係
 Deployment 	&rarr; ReplicaSets 	&rarr; pods
@@ -179,6 +178,8 @@ kubectl rollout undo deployment web --to-revision=1
 | **擴展性** | 可以根據需要動態增加或減少 Pod 副本 | 無法動態調整 Pod 數量，Pod 副本數等於節點數量 |
 | **容錯性** | 根據 `replicas` 的設置保證高可用性 | 每個節點都有一個 Pod，保證每個節點的服務運行 |
 
+---
+
 # Scheduling
 
 ## Node Selector
@@ -201,6 +202,39 @@ spec:
 kubectl taint nodes k8s-worker1 key1=value1:NoSchedule
 kubectl taint nodes k8s-worker1 key1=value1:NoSchedule-
 ```
+
+## Cordoning
+
+### cordoning
+標記某個節點成為unschedulable，使新pod不會被佈署於此節點，但已運行不受影響。
+```sh
+kubectl cordon <node_name>
+```
+常用於維護時段
+
+### drain
+使pod服務在節點上gracefully停止
+```sh
+kubectl drain <node name> --ignore-daemonsets
+```
+
+### uncordon
+取消標記
+
+## Manual Scheduling
+指定效果無視<taint>及<cordon>，強制佈署與指定節點。
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web
+spec:
+   nodeName: 'k8s-worker1'
+   containers:
+    - name: nginx-container
+      image: nginx:latest
+```
+
 ------
 
 # Storage
@@ -209,4 +243,67 @@ kubectl taint nodes k8s-worker1 key1=value1:NoSchedule-
 ```sh
 kubectl get pv
 kubectl get pvc
+```
+
+# Networking
+
+# Security
+
+## Certificates and kubeconfig files
+
+預設憑證位置</etc/kubernetes/pki/>
+curl https//10.0.101.31:6443 --cacert /etc/kubernetes/pki/ca.crt
+curl https//10.0.101.31:6443 --insecure
+
+取得憑證資料
+```sh
+kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}'
+```
+取得憑證資料並解碼
+```sh
+kubectl config view --raw -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' |base64 decode
+```
+此資料與</etc/kubernetes/pki/ca.crt>相同
+
+用戶證書
+kubectl config view --raw -o jsonpath='{.users[0].user.client-certificate-data}' |base64 --decode > client.crt
+kubectl config view --raw -o jsonpath='{.users[0].user.client-key-data}' |base64 --decode > client.key
+
+curl https//10.0.101.31:6443 --cacert /etc/kubernetes/pki/ca.crt --cert client.crt --key client.key
+
+## Role Based Access Control
+
+### Roles
+Roles定義腳色操作權限，且切分Namespace
+```sh
+kubectl create role demorole --verb=get,list --resource=pods,deployment --namespace ns1
+kubectl create role demorole --verb=* --resource=pods --namespace ns1
+```
+- --verb=get,list：這些是允許的操作，代表查看 (get) 和列出 (list)。
+- --resource=pods,Deployment：資源類型是Pods及Deployment。
+- --namespace=ns1：此 Role 限定在命名空間 ns1 中
+
+## ClusterRoles
+Cluster的權限操作，跨越Namespace
+```sh
+kubectl create clusterrole democlusterrole --verb=get,list --resource=nodes
+```
+
+## RoleBinding/ClusterRoleBinding
+
+### RoleBinding
+將腳色與用戶綁定
+```sh
+kubectl create rolebinding demorolebinding --role=demorole --user=demouser --namespace ns1
+```
+### ClusterRoleBinding
+將腳色與用戶綁定
+```sh
+kubectl create clusterrolebinding democlusterrolebinding --clusterrole=democlusterrole --user=demouser
+```
+
+#### Checking way
+```sh
+kubectl auth can-i list pod --as demouser
+kubectl auth can-i list pod --as demouser --namespace ns1
 ```
