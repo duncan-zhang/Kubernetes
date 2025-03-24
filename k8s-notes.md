@@ -114,28 +114,7 @@ kubectl config set-context --current --namespace demo
 ```
 ------
 
-# Deployment
-
-### 控制關係
-Deployment -> ReplicaSets -> pods
-
-### replicas
-```sh
-kubectl scale deployment web --replicas 5
-```
-```sh
-kubectl edit deployments.apps web
-```
-### rollout
-```sh
-kubectl edit deployments.apps web
-```
-```sh
-kubectl rollout history deployment web
-```
-```sh
-kubectl rollout undo deployment web --to-revision=1
-```
+# Controller and Deployment
 
 ## Labels
 show
@@ -152,10 +131,69 @@ kubectl label nodes k8s-worker1 hardware-
 ```
 ------
 
+## 控制關係
+Deployment 	&rarr; ReplicaSets 	&rarr; pods
+
+## Imperative
+```sh
+kubectl create deployment web --image=nginx
+```
+擴充
+```sh
+kubectl scale deployment web --replicas 5
+```
+
+## Declarative
+```sh
+kubectl create deployment web --imgae=nginx --dry-run=client -o yaml > deploy-web.yaml
+kubectl apply -f deploy-web.yaml
+```
+擴充
+```sh
+kubectl edit deployments.apps web
+```
+Update image
+```sh
+kubectl set image delpoyment/web nginx=nginx=1.26.0
+```
+
+## Rolling Back
+查看history
+```sh
+kubectl rollout history deployment web
+```
+回滾編號
+```sh
+kubectl rollout undo deployment web --to-revision=1
+```
+## DaemonSet
+
+## Deployment vs DaemonSet
+
+| 特性 | Deployment | DaemonSet |
+| --- | --- | --- |
+| **用途** | 管理普通應用程序的 Pod 副本 | 確保每個節點上都有一個 Pod 副本 |
+| **Pod 副本數量** | 根據 `replicas` 設置數量 | 集群中的每個節點都有一個 Pod 副本 |
+| **使用情境** | 適合 Web 應用、API 服務等 | 適合日誌收集、監控代理、網絡代理等 |
+| **滾動更新** | 支持滾動更新 | 支持滾動更新 |
+| **擴展性** | 可以根據需要動態增加或減少 Pod 副本 | 無法動態調整 Pod 數量，Pod 副本數等於節點數量 |
+| **容錯性** | 根據 `replicas` 的設置保證高可用性 | 每個節點都有一個 Pod，保證每個節點的服務運行 |
+
 # Scheduling
 
 ## Node Selector
-
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web
+spec:
+  containers:
+  - name: hello-world
+    image: nginx
+  nodeSelector:
+    hardware: local_gpu
+```
 ## Affinity and Anti-Affinity
 
 ## Taints and Tolerations
