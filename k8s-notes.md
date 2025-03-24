@@ -5,9 +5,10 @@
 ## How to create a pod?
 
 ### Imperative
+```sh
 kubectl run web --image=nginx
 kubectl run client --image=busybox --command -- bin/sh -c "sleep 100000"
-
+```
 僅能建立單一containerd
 
 ### Declarative
@@ -104,7 +105,7 @@ kubectl label nodes k8s-worker1 hardware-
 ## Affinity and Anti-Affinity
 
 ## Taints and Tolerations
-sh ```
+```sh
 kubectl taint nodes k8s-worker1 key1=value1:NoSchedule
 kubectl taint nodes k8s-worker1 key1=value1:NoSchedule-
 ```
@@ -112,5 +113,7 @@ kubectl taint nodes k8s-worker1 key1=value1:NoSchedule-
 # Storage
 
 ## Persistent Volumes and Persistent Volumes Claims
+```sh
 kubectl get pv
 kubectl get pvc
+```
