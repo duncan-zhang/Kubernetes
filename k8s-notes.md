@@ -339,3 +339,28 @@ kubectl create rolebinding demorolebinding --role=demorole --serviceaccount=defa
 ```sh
 kubectl auth can-i list pods --as=system:serviceaccount:default:demo-sa
 ```
+
+# Maintaining Kubernetes Clusters
+
+## etcd backup and restore operations
+
+### Snapshot using etcdctl
+```sh
+sudo ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
+  --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+  --cert=/etc/kubernetes/pki/etcd/server.crt \
+  --key=/etc/kubernetes/pki/etcd/server.key \
+  snapshot save /var/lib/dat-backup.db
+```
+- snapshot save <backup-file-location>，實務會儲存於異地
+
+### Snapshot status
+```sh
+sudo etcdutl --write-out=table snapshot status /var/lib/dat-backup.db
+```
+- </var/lib/dat-backup.db>依照檔案路徑配置
+
+### Restoring etcd with etctl
+```sh
+sudo ETCDCTL_API=3 etcdutl snapshot restore /var/lib/dat-backup.db --data-dir /var/lib/etcd
+```
