@@ -81,10 +81,10 @@ kubectl config set-context --current --namespace demo
 ### 控制關係
 Deployment -> ReplicaSets -> pods
 
-###replicas
+### replicas
 kubectl scale deployment web --replicas 5
 kubectl edit deployments.apps web
-###rollout
+### rollout
 kubectl edit deployments.apps web
 kubectl rollout history deployment web
 kubectl rollout undo deployment web --to-revision=1
@@ -103,9 +103,11 @@ kubectl label nodes k8s-worker1 hardware-
 
 ## Affinity and Anti-Affinity
 
-##Taints and Tolerations
+## Taints and Tolerations
+sh ```
 kubectl taint nodes k8s-worker1 key1=value1:NoSchedule
 kubectl taint nodes k8s-worker1 key1=value1:NoSchedule-
+```
 
 # Storage
 
