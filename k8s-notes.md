@@ -307,3 +307,35 @@ kubectl create clusterrolebinding democlusterrolebinding --clusterrole=democlust
 kubectl auth can-i list pod --as demouser
 kubectl auth can-i list pod --as demouser --namespace ns1
 ```
+
+## ServiceAccount
+一種特殊帳戶，專門用來為Pod提供身份驗證和授權的方式。它允許應用程式（運行在 Pod 中）與 Kubernetes API 進行交互，例如查詢資源、創建資源、更新資源等。  
+### 建立ServiceAccount
+```sh
+kubectl create serviceaccount demo-sa
+```
+### 配置於pod中
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+spec:
+   serviceAccount: demosa
+   containers:
+   - name: client
+     image: xiaopeng163/net-box:latest
+     command:
+      - sh
+      - -c
+      - "sleep 1000000"
+```
+### ServiceAccount Authorization添加
+```sh 
+kubectl create role demorole --verb=get,list --resource=pods
+kubectl create rolebinding demorolebinding --role=demorole --serviceaccount=default:demo-sa
+```
+#### checking way
+```sh
+kubectl auth can-i list pods --as=system:serviceaccount:default:demo-sa
+```
