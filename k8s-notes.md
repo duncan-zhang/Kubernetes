@@ -91,9 +91,11 @@ kubectl proxy &
 curl http://127.0.0.1:8001/api/v1/namespaces?limit=500
 ```
 ## Static Pod
+Managed by the kubelet on Node
+kubelet’s configuration, by default is `/etc/kubernetes/manifests`
+kubelet configuration file: `/var/lib/kubelet/config.yaml`
 
-
-# Namespace
+## Namespace
 ```sh
 kubectl get ns
 kubectl describe ns
