@@ -352,15 +352,173 @@ sudo ETCDCTL_API=3 etcdctl --endpoints=https://127.0.0.1:2379 \
   --key=/etc/kubernetes/pki/etcd/server.key \
   snapshot save /var/lib/dat-backup.db
 ```
-- snapshot save <backup-file-location>，實務會儲存於異地
+- snapshot save <backup-file-location>，建議存於異地
 
 ### Snapshot status
 ```sh
-sudo etcdutl --write-out=table snapshot status /var/lib/dat-backup.db
+sudo etcdctl --write-out=table snapshot status /var/lib/dat-backup.db
 ```
 - </var/lib/dat-backup.db>依照檔案路徑配置
 
 ### Restoring etcd with etctl
 ```sh
-sudo ETCDCTL_API=3 etcdutl snapshot restore /var/lib/dat-backup.db --data-dir /var/lib/etcd
+sudo ETCDCTL_API=3 etcdctl snapshot restore /var/lib/dat-backup.db --data-dir /var/lib/etcd
+```
+
+## Upgrading an existing Cluster (未驗證)
+- 只能小版本分位更新
+ 1.24 &rarr; 1.25
+[changlog]https://github.com/kubernetes/kubernetes/tree/master/CHANGELOG
+
+### Upgrade Control Plane (master)
+```sh
+# update kubeadm
+TARGET_VERSION = 1.3.2.X
+sudo apt-get update
+sudo apt-cache madison kubeadm
+sudo apt-mark unhold kubeadm &&\
+sudo apt-get update && sudo apt-get install -y kubeadm=$TARGET_VERSION &&\
+sudo apt-mark hold kubeadm
+
+# drain master node
+kubectl drain k8s-master --ignore-daemonsets
+
+sudo kubeadm upgrade plan
+sudo kubeadm upgrade apply v$TARGET_VERSION
+
+# uncordon
+kubectl uncordon k8s-master
+
+# update kubelet and kubectl
+sudo apt-mark unhold kubelet kubectl && \
+sudo apt-get update && sudo apt-get install -y kubelet=$TARGET_VERSION kubectl=$TARGET_VERSION && \
+sudo apt-mark hold kubelet kubectl
+# restart kubelet
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+```
+### Upgrade work node (worker)
+```sh
+# go to master node
+kubectl drain k8s-worker1 --ingore-daemonsets
+
+# go to node and update kubeadm
+TARGET_VERSION = 1.3.2.X
+sudo apt-get update
+sudo apt-cache madison kubeadm
+sudo apt-mark unhold kubeadm &&\
+sudo apt-get update && sudo apt-get install -y kubeadm=$TARGET_VERSION &&\
+sudo apt-mark hold kubeadm
+
+sudo kubeadm upgrade node
+
+# update kubelet
+sudo apt-mark unhold kubelet && \
+sudo apt-get update && sudo apt-get install -y kubelet=$TARGET_VERSION && \
+sudo apt-mark hold kubelet 
+# restart kubelet
+sudo systemctl daemon-reload
+sudo systemctl restart kubelet
+
+# go to master node, uncordon this node
+kubectl uncordon k8s-worker1
+```
+
+## Cluster Cert Renew
+- k8s cluster內部通訊Cert有效為1年，到期後須更新
+- 錯誤訊息: x509: certificate has expired or is not yet valid
+### Checking Cert Expired Date
+```sh
+sudo kubeadm certs check-expiration
+```
+### Renew Cert
+建議etcd snapshot
+```sh
+sudo kubeadm certs renew all
+```
+完成後須重啟kube-apiserver, kube-controller-manager, kube-scheduler和etcd。
+
+---
+# Logging and Monitoring
+
+## Logging
+
+### logs排查資料流
+kubectl logs &rarr; API Server &rarr; kubelet &rarr; container logs
+
+### kubectl logs
+```sh
+#basic
+kubectl logs $POD_NAME
+#multi-container pod
+kubectl logs $POD_NAME -c $CONTAINER_NAME
+#all containers
+kubectl logs $POD_NAME --all-containers
+#label select
+kubectl logs --selector app=demo
+#follow lastest logs
+kubectl logs -f $POD_NAME
+#get last 5 entries logs
+kubectl logs $POD_NAME --tail 5
+```
+# API Server
+- kubectl異常呼叫不到api時可排茶方案
+```sh
+sudo crictl --runtime-endpoint unix:///run/containerd/containerd.sock ps
+sudo crictl --runtime-endpoint unix:///run/containerd/containerd.sock logs $CONTAINER_ID
+```
+或是
+```sh
+sudo tail /var/log/containers/$CONTAINER_NAME_$CONTAINER_ID
+```
+### kubelet logs
+```sh
+systemctl status kubelet.service  
+journalctl -u kubelet.service --no-pager
+journalctl -u kubelet.service | grep -i ERROR
+journalctl -u kubelet.service --since today --no-pager
+```
+
+## Events
+
+### Global
+```sh
+kubectl get events
+#篩選
+kubectl get events --field-selector type=Warning,reason=Failed
+#run `fg` and ctrl +c to break it
+kubectl get events --watch &  
+```
+### Per Resource
+```sh
+kubectl describe pods nginx
+```
+
+## Monitoring
+- 需安裝Metrics Server套件
+查看CPU、Memory
+```sh
+kubectl top pods
+kubectl top nodes
+```
+
+# Others
+
+## JsonPath
+```sh
+# 獲取containers names
+kubectl get pods -o jsonpath='{.items[*].metadata.name}'
+
+# 獲取containers image資訊
+kubectl get pods --all-namespaces -o jsonpath='{.items[*].spec.containers[*].image}'
+
+# 跨行
+kubectl get pods --all-namespaces -o jsonpath='{.items[*].spec.containers[*].image}{"\n"}'
+
+# ?() filter篩選
+# @ - the current object
+kubectl get nodes -o jsonpath="{.items[*].status.addresses[?(@.type=='InternalIP')].address}"
+
+# sorting排序
+kubectl get pods -A -o jsonpath='{.items[*].metadata.name}{"\n"}' --sort-by=.metadata.name
 ```
