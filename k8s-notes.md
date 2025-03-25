@@ -462,8 +462,8 @@ kubectl logs -f $POD_NAME
 kubectl logs $POD_NAME --tail 5
 ```
 # API Server
-- kubectl異常呼叫不到api時可排茶方案
-```sh
+- kubectl異常呼叫不到api時可排查方法
+```bash
 sudo crictl --runtime-endpoint unix:///run/containerd/containerd.sock ps
 sudo crictl --runtime-endpoint unix:///run/containerd/containerd.sock logs $CONTAINER_ID
 ```
