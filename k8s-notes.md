@@ -1,6 +1,6 @@
 # Pod
 
-## Imperative
+## `Imperative`
 ```sh
 kubectl run web --image=nginx
 ```
