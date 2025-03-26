@@ -222,7 +222,7 @@ kubectl drain <node name> --ignore-daemonsets
 取消標記
 
 ## Manual Scheduling
-指定效果無視`taint`及`cordon`，強制佈署與指定節點。
+指定效果無視`taint`及`cordon`，強制佈署指定節點。
 ```yaml
 apiVersion: v1
 kind: Pod
