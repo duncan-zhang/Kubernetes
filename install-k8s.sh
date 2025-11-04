@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "\033[34m[TASK 1] Disable and turn off SWAP\033[0m"
+echo -e "\033[34m[TASK 1] Disable and turn off SWAP\033[0m"
 sed -i '/swap/d' /etc/fstab
 swapoff -a
 
