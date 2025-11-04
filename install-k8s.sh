@@ -7,7 +7,7 @@ swapoff -a
 echo -e "\033[34m[TASK 2] Install some tools\033[0m"
 apt install -y jq iputils-ping net-tools >/dev/null 2>&1
 
-echo "\033[34m[TASK 3] Enable and Load Kernel modules\033[0m"
+echo -e "\033[34m[TASK 3] Enable and Load Kernel modules\033[0m"
 cat >>/etc/modules-load.d/containerd.conf<<EOF
 overlay
 br_netfilter
